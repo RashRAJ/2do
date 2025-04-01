@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/css/bootstrap.min.css"
+          integrity="sha384-SI27wrMjH3ZZ89r4o+fGIJtnzkAnFs3E4qz9DIYioCQ5l9Rd/7UAa8DHcaL8jkWt" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Todo</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        h1 {
+            margin-top: 40px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-size: 1rem;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+        .table th {
+            font-weight: 700;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-bottom: 2px solid #ddd;
+        }
+        .table td {
+            padding: 12px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .table tr {
+            transition: transform 0.2s ease;
+        }
+        .table tr:hover {
+            transform: translateY(-2px);
+        }
+        .table .btn {
+            margin: 0 5px;
+        }
+        .strike {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div style="text-align: center;">
+        <h1>My Todo List</h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Add a Task</div>
+            <div class="card-body">
+                <form action="/task" method="post">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" name="title" placeholder="Enter task title">
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Content</label>
+                        <textarea class="form-control" name="content" rows="3" placeholder="Enter task details"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <br><br>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Your Tasks</div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Task</th>
+                            <th scope="col">Content</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Todos}}
+                            {{if eq .Status "completed"}}
+                                <tr>
+                                    <td><strike>{{.Title}}</strike></td>
+                                    <td>{{.Content}}</td>
+                                    <td>✅ Completed</td>
+                                    <td>{{.Created}}</td>
+                                    <td>
+                                        <button class="btn btn-primary" disabled>Complete</button>
+                                        <button class="btn btn-danger" disabled>Delete</button>
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr>
+                                    <td>{{.Title}}</td>
+                                    <td>{{.Content}}</td>
+                                    <td>⏳ Not Completed</td>
+                                    <td>{{.Created}}</td>
+                                    <td>
+                                        <button class="btn btn-primary complete-task" data-id="{{.ID}}">Complete</button>
+                                        <button class="btn btn-danger delete-task" data-id="{{.ID}}">Delete</button>
+                                    </td>
+                                </tr>
+                            {{end}}
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle delete requests -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Add event listeners to all delete buttons
+            document.querySelectorAll(".delete-task").forEach(button => {
+                button.addEventListener("click", function (event) {
+                    event.preventDefault(); // Prevent the default button behavior
+
+                    const taskId = this.getAttribute("data-id");
+
+                    // Send a DELETE request
+                    fetch(`/delete/${taskId}`, {
+                        method: "DELETE",
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                window.location.reload(); // Reload the page to reflect the changes
+                            } else {
+                                console.error("Error deleting task");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                        });
+                });
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+        // Add event listeners to all complete buttons
+        document.querySelectorAll(".complete-task").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault(); // Prevent the default button behavior
+
+                const taskId = this.getAttribute("data-id");
+
+                // Send a PUT request to update the task status
+                fetch(`/update/${taskId}`, {
+                    method: "PUT",
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload(); // Reload the page to reflect the changes
+                        } else {
+                            console.error("Error completing task");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                    });
+            });
+        });
+    });
+    </script>
+</body>
+</html>
