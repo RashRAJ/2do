@@ -5,5 +5,8 @@
 - Golang module system
   - module imports and named imports
 - Go versioning and version upgrade
+- OOP in Golang
+- Interface and Dependency Injection
 
-## To Learn Concepts
+## ToDO Learn Concepts
+- Design Patterns
