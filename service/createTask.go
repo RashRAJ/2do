@@ -1,7 +1,7 @@
 package service
 
 import (
-	"../repository"
+	"2do.com/repository"
 	"Errors"
 	"go.uber.org/zap"
 )
