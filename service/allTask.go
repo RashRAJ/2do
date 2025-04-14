@@ -8,15 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type TaskService struct {
-	repo   *repository.TaskRepository
-	logger *zap.Logger
-}
-
-func NewTaskService(repo *repository.TaskRepository, logger *zap.Logger) *TaskService {
-	return &TaskService{repo: repo, logger: logger}
-}
-
 func (s *TaskService) GetAllTasks() ([]models.Task, error) {
 	start := time.Now()
 	defer func() {

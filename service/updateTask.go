@@ -9,11 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type TaskService struct {
-	logger *zap.Logger
-	repo   *repository.TaskRepository
-}
-
 func (s *TaskService) UpdateTask(id int, tittle string, content string, status string) error {
 	if id <= 0 {
 		return errors.New("invalid task ID")

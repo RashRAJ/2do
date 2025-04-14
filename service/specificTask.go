@@ -5,21 +5,11 @@ import (
 	"log/slog"
 	"time"
 
-	"../models"
-	"../repository"
+	"2do.com/models"
 	"go.uber.org/zap"
 )
 
-type TaskService struct {
-	repo   *repository.TaskRepository
-	logger *zap.Logger
-}
-
-func NewTaskService(repo *repository.TaskRepository, logger *zap.Logger) *TaskService {
-	return &TaskService{repo: repo, logger: logger}
-}
-
-func SpecificTask(id int) (*models.Task, error) {
+func (s *TaskService) SpecificTask(id int) (*models.Task, error) {
 	if id <= 0 {
 		s.logger.Error("Invalid task ID", zap.Int("id", id))
 		return nil, errors.New("invalid task ID")
