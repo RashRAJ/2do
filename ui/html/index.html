@@ -124,7 +124,7 @@
         <div class="card">
             <div class="card-header">Add a Task</div>
             <div class="card-body">
-                <form action="/task" method="post">
+                <form action="/api/tasks" method="post">
                     <div class="form-group">
                         <label for="title">Title</label>
                         <input type="text" class="form-control" name="title" placeholder="Enter task title">
@@ -198,7 +198,7 @@
                     const taskId = this.getAttribute("data-id");
 
                     // Send a DELETE request
-                    fetch(`/delete/${taskId}`, {
+                    fetch(`/api/tasks/${taskId}`, {
                         method: "DELETE",
                     })
                         .then(response => {
@@ -224,8 +224,14 @@
                 const taskId = this.getAttribute("data-id");
 
                 // Send a PUT request to update the task status
-                fetch(`/update/${taskId}`, {
+                fetch(`/api/tasks/${taskId}`, {
                     method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        Completed: true
+                    })
                 })
                     .then(response => {
                         if (response.ok) {

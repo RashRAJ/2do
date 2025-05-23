@@ -1,62 +1,80 @@
 package main
 
 import (
-	"database/sql"
+	"2do.com/service"
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
+	"2do.com/handlers"
+	"2do.com/repository"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
-type Task struct {
-	ID      int       `json:"id"`
-	Title   string    `json:"title"`
-	Content string    `json:"content"`
-	Created time.Time `json:"created"`
-	Status  string    `json:"status"`
-}
-
-var db *sql.DB
-var logger *zap.Logger
-
-func home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("welcome to my home page"))
-}
-
-func initlogger() {
-	var err error
-	logger, _ = zap.NewProduction()
+func main() {
+	// Initialize logger
+	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatal("Failed to initialize logger", zap.Error(err))
+		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 	defer logger.Sync()
-}
 
-func main() {
-	initlogger()
-
-	var err error
-	db, err = sql.Open("mysql", "web:password@tcp(127.0.0.1:3306)/snippetbox")
-	if err != nil {
-		logger.Error("Failed to connect to db", zap.Error(err))
-	}
-	logger.Info("Connected to db")
+	// Connect to database
+	db := repository.ConnectDB()
 	defer db.Close()
 
+	// Initialize repository
+	taskRepo := repository.NewPostgresqlClassic(db)
+
+	ctx := context.Background()
+	if err := service.Migrate(ctx, taskRepo); err != nil {
+		logger.Fatal("Failed to run database migration", zap.Error(err))
+	}
+
+	// Initialize service
+	//taskService := service.NewTaskService(taskRepo, logger)
+
+	// Initialize router
 	router := mux.NewRouter()
 
-	router.Handle("/metrics", promhttp.Handler())
-	router.HandleFunc("/", allTask).Methods("GET")
-	router.HandleFunc("/task/{id}", specificTask).Methods("GET")
-	router.HandleFunc("/task", createTask).Methods("POST")
-	router.HandleFunc("/update/{id}", updateTask).Methods("PUT")
-	router.HandleFunc("/delete/{id}", DeleteTask).Methods("DELETE")
-	logger.Info("Server started on port", zap.String("port", "8080"))
-	http.ListenAndServe(":8080", router)
+	// Register routes
+	handlers.RegisterRoutes(router, taskRepo)
+
+	// Start server
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	// Run server in a goroutine
+	go func() {
+		logger.Info("Starting server on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("Failed to start server", zap.Error(err))
+		}
+	}()
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	// Create a deadline for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// Shutdown server gracefully
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Fatal("Server forced to shutdown", zap.Error(err))
+	}
+
+	logger.Info("Server exiting")
 }

@@ -6,10 +6,10 @@ import (
 )
 
 type TaskService struct {
-	repo   *repository.TaskRepository
+	repo   repository.TaskRepository
 	logger *zap.Logger
 }
 
-func NewTaskService(repo *repository.TaskRepository, logger *zap.Logger) *TaskService {
+func NewTaskService(repo repository.TaskRepository, logger *zap.Logger) *TaskService {
 	return &TaskService{repo: repo, logger: logger}
 }

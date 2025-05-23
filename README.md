@@ -8,3 +8,11 @@
 7. Security considerations
 8. Metrics and server endpoint should be separated
 9. Adpat to 12 factor app - https://12factor.net/
+
+
+
+To run the app
+
+```aiignore
+docker run --name some-postgres -e POSTGRES_PASSWORD=taskpassword -e POSTGRES_DB=task -p 5432:5432 -d postgres
+```
