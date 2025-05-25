@@ -1,7 +1,8 @@
-package models
+package config
 
-type DBConn struct {
-	DbConfig DbConfig `yaml:"dbconfig"`
+type Config struct {
+	//Server   ServerConfig `yaml:"server"`
+	DbConfig DbConfig `yaml:"dbConfig"`
 }
 
 type DbConfig struct {
@@ -11,3 +12,7 @@ type DbConfig struct {
 	Password string `yaml:"password"`
 	DbName   string `yaml:"dbname"`
 }
+
+//type ServerConfig struct {
+//	Port int `yaml:"port"`
+//}

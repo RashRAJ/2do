@@ -8,4 +8,5 @@ type Task struct {
 	Content   string
 	Created   time.Time
 	Completed bool
+	Priority  string
 }

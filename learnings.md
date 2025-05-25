@@ -10,3 +10,6 @@
 
 ## ToDO Learn Concepts
 - Design Patterns
+
+## checks
+- init functions in go and why its special

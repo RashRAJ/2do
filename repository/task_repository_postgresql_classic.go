@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/jackc/pgconn"
 )
@@ -24,7 +25,8 @@ func (r *PostgresqlClassic) Migrate(ctx context.Context) error {
         title VARCHAR(255) NOT NULL,
         content VARCHAR(255) NOT NULL,
         completed BOOLEAN NOT NULL DEFAULT FALSE,
-        created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        priority VARCHAR(50) DEFAULT 'medium'
     ) 
     `
 	_, err := r.db.ExecContext(ctx, query)
@@ -33,7 +35,7 @@ func (r *PostgresqlClassic) Migrate(ctx context.Context) error {
 
 func (r *PostgresqlClassic) CreateTask(ctx context.Context, task Task) (*Task, error) {
 	var id int64
-	err := r.db.QueryRowContext(ctx, "INSERT INTO tasks (title, content, completed, created) VALUES ($1, $2, $3, $4) RETURNING id", task.Title, task.Content, task.Completed, task.Created).Scan(&id)
+	err := r.db.QueryRowContext(ctx, "INSERT INTO tasks (title, content, completed, created, priority) VALUES ($1, $2, $3, $4, $5) RETURNING id", task.Title, task.Content, task.Completed, task.Created, task.Priority).Scan(&id)
 	if err != nil {
 		var pgxError *pgconn.PgError
 		if errors.As(err, &pgxError) {
@@ -48,8 +50,10 @@ func (r *PostgresqlClassic) CreateTask(ctx context.Context, task Task) (*Task, e
 }
 
 func (r *PostgresqlClassic) GetAllTasks(ctx context.Context) ([]Task, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT id, title, content, completed, created FROM tasks")
+	log.Println("Repository GetAllTasks called")
+	rows, err := r.db.QueryContext(ctx, "SELECT id, title, content, completed, created, priority FROM tasks")
 	if err != nil {
+		log.Printf("Error querying tasks: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -57,17 +61,19 @@ func (r *PostgresqlClassic) GetAllTasks(ctx context.Context) ([]Task, error) {
 	var GetAllTasks []Task
 	for rows.Next() {
 		var task Task
-		if err := rows.Scan(&task.ID, &task.Title, &task.Content, &task.Completed, &task.Created); err != nil {
+		if err := rows.Scan(&task.ID, &task.Title, &task.Content, &task.Completed, &task.Created, &task.Priority); err != nil {
+			log.Printf("Error scanning task: %v", err)
 			return nil, err
 		}
 		GetAllTasks = append(GetAllTasks, task)
 	}
+	log.Printf("Repository retrieved %d tasks", len(GetAllTasks))
 	return GetAllTasks, nil
 }
 
 func (r *PostgresqlClassic) GetbyID(ctx context.Context, id int) (Task, error) {
 	var task Task
-	err := r.db.QueryRowContext(ctx, "SELECT id, title, content, completed, created FROM tasks WHERE id = $1", id).Scan(&task.ID, &task.Title, &task.Content, &task.Completed, &task.Created)
+	err := r.db.QueryRowContext(ctx, "SELECT id, title, content, completed, created, priority FROM tasks WHERE id = $1", id).Scan(&task.ID, &task.Title, &task.Content, &task.Completed, &task.Created, &task.Priority)
 	if err != nil {
 		return Task{}, err
 	}
@@ -75,7 +81,7 @@ func (r *PostgresqlClassic) GetbyID(ctx context.Context, id int) (Task, error) {
 }
 
 func (r *PostgresqlClassic) UpdateTask(ctx context.Context, id int, updated Task) (*Task, error) {
-	res, err := r.db.ExecContext(ctx, "UPDATE tasks SET title = $1, content = $2, completed = $3 WHERE id = $4", updated.Title, updated.Content, updated.Completed, id)
+	res, err := r.db.ExecContext(ctx, "UPDATE tasks SET title = $1, content = $2, completed = $3, priority = $4 WHERE id = $5", updated.Title, updated.Content, updated.Completed, updated.Priority, id)
 	if err != nil {
 		var pgxError *pgconn.PgError
 		if errors.As(err, &pgxError) {

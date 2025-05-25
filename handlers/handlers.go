@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -12,8 +13,8 @@ import (
 )
 
 type taskHandler struct {
-	TaskRepo repository.TaskRepository
-	Template *template.Template
+	TaskRepo  repository.TaskRepository
+	Templates *template.Template
 }
 
 //type Response struct {
@@ -51,11 +52,14 @@ func (h *taskHandler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *taskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
+	log.Println("GetAllTasks handler called")
 	tasks, err := service.GetAllTasks(r.Context(), h.TaskRepo)
 	if err != nil {
+		log.Printf("Error getting all tasks: %v", err)
 		http.Error(w, "Error getting all tasks", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("Number of tasks retrieved: %d", len(tasks))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tasks)
 }
