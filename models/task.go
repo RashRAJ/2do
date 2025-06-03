@@ -8,4 +8,7 @@ type Task struct {
 	Content string    `json:"content"`
 	Created time.Time `json:"created"`
 	Status  string    `json:"status"`
+	//these two fields are optional
+	Completed bool   `json:"-"`
+	Priority  string `json:"-"`
 }

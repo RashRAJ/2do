@@ -1,7 +1,6 @@
 package main
 
 import (
-	"2do.com/config"
 	"2do.com/service"
 	"context"
 	"log"

@@ -1,15 +1,15 @@
 package handlers
 
 import (
+	"2do.com/models"
+	"2do.com/repository"
+	"2do.com/service"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
-
-	"2do.com/repository"
-	"2do.com/service"
-	"github.com/gorilla/mux"
 )
 
 type taskHandler struct {
@@ -43,7 +43,7 @@ func (h *taskHandler) Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Todos []repository.Task
+		Todos []models.Task
 	}{
 		Todos: tasks,
 	}
@@ -85,7 +85,7 @@ func (h *taskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *taskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
-	var task repository.Task
+	var task models.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Invalid task data: "+err.Error(), http.StatusBadRequest)
 		return
@@ -110,7 +110,7 @@ func (h *taskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var task repository.Task
+	var task models.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Invalid task data: "+err.Error(), http.StatusBadRequest)
 		return

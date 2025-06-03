@@ -7,3 +7,13 @@ dbConfig:
   username: postgres
   password: taskpassword
   dbname: task
+
+  maxOpenConns: 1000000      # 1 million maximum open connections
+  maxIdleConns: 100000       # 100k idle connections (adjust based on your needs)
+  connMaxLifetime: "1h"      # Connections live for 1 hour max
+  connMaxIdleTime: "30m"     # Idle connections timeout after 30 minutes
+
+  maxRetries: 3             
+  initialDelay: "500ms"      # Start with 500ms delay
+  maxDelay: "8s"             # Cap delay at 8 seconds
+  totalTimeout: "50s"

@@ -10,6 +10,8 @@
 
 ## ToDO Learn Concepts
 - Design Patterns
+- DB BackoffStrategies Options
+- error overide
 
 ## checks
 - init functions in go and why its special
