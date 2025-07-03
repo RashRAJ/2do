@@ -14,10 +14,11 @@ var (
 )
 
 type TaskRepository interface {
-	Migrate(ctx context.Context) error
 	CreateTask(ctx context.Context, task models.Task) (*models.Task, error)
 	GetAllTasks(ctx context.Context) ([]models.Task, error)
 	DeleteTask(ctx context.Context, id int) error
 	UpdateTask(ctx context.Context, id int, updated models.Task) (*models.Task, error)
 	GetbyID(ctx context.Context, id int) (models.Task, error)
 }
+
+// interface got implemented here to be used by the service layer

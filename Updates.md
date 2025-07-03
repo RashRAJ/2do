@@ -18,8 +18,7 @@ Your API now has the following functional endpoints:
 - `PUT /api/tasks/{id}` - Update a specific task
 - `DELETE /api/tasks/{id}` - Delete a specific task
 
-## Next Steps
-
-**Implement Authentication**: Replace the placeholder Auth middleware with actual authentication
-**Implement Caching**: Add caching for frequently accessed data
-
+Application maintance
+```
+go mod edit -go=1.23.0
+```

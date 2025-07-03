@@ -11,7 +11,14 @@
 ## ToDO Learn Concepts
 - Design Patterns
 - DB BackoffStrategies Options
-- error overide
+- error override
+- Concurrency safe keywords in GO
+- Diff btw webhooks and rest api
+- interfaces and dependency injection in go
+- POINTERS IN Go
+
+## Highlights
+
 
 ## checks
 - init functions in go and why its special

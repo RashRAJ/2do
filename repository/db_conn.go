@@ -2,6 +2,7 @@ package repository
 
 import (
 	"2do.com/config"
+	"2do.com/middleware"
 	"context"
 	"fmt"
 	"log"
@@ -9,11 +10,13 @@ import (
 
 	"github.com/cenkalti/backoff/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 // ConnectDB establishes a database connection pool with retry logic
 func ConnectDB() *pgxpool.Pool {
 	dbConfig := config.LoadDBConfig()
+	logger := middleware.ZapLogger
 
 	ctx, cancel := context.WithTimeout(context.Background(), dbConfig.TotalTimeout)
 	defer cancel()
@@ -21,6 +24,7 @@ func ConnectDB() *pgxpool.Pool {
 	poolConfig, err := buildPoolConfig(dbConfig)
 	if err != nil {
 		log.Printf("Failed to build pool config: %v", err)
+		logger.Error("Failed to build pool config", zap.Error(err))
 		return nil
 	}
 
@@ -30,11 +34,14 @@ func ConnectDB() *pgxpool.Pool {
 	}
 
 	log.Printf("Database pool connected successfully")
+	logger.Info("Database pool connected successfully")
 	return pool
 }
 
 // buildPoolConfig constructs the pgxpool configuration
 func buildPoolConfig(config config.DbConfig) (*pgxpool.Config, error) {
+	logger := middleware.ZapLogger
+
 	baseConnStr := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.DbName,
@@ -42,6 +49,7 @@ func buildPoolConfig(config config.DbConfig) (*pgxpool.Config, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(baseConnStr)
 	if err != nil {
+		logger.Error("failed to parse config", zap.Error(err))
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
 
@@ -58,6 +66,7 @@ func buildPoolConfig(config config.DbConfig) (*pgxpool.Config, error) {
 // attemptConnection handles the retry logic for database connection pool
 
 func attemptConnection(ctx context.Context, dbConfig config.DbConfig, poolConfig *pgxpool.Config) *pgxpool.Pool {
+	logger := middleware.ZapLogger
 	backoffStrategy := createBackoffStrategy(dbConfig)
 
 	var pool *pgxpool.Pool
@@ -69,7 +78,7 @@ func attemptConnection(ctx context.Context, dbConfig config.DbConfig, poolConfig
 	for retryCount < dbConfig.MaxRetries {
 		// Check if we've exceeded total timeout
 		if time.Since(startTime) >= dbConfig.TotalTimeout {
-			log.Printf("Failed to connect to database: total timeout exceeded")
+			logger.Error("Failed to connect to database: total timeout exceeded")
 			return nil
 		}
 
@@ -77,6 +86,7 @@ func attemptConnection(ctx context.Context, dbConfig config.DbConfig, poolConfig
 		select {
 		case <-ctx.Done():
 			log.Printf("Database connection cancelled: %v", ctx.Err())
+			logger.Error("Database connection cancelled", zap.Error(ctx.Err()))
 			return nil
 		default:
 		}
@@ -105,11 +115,13 @@ func attemptConnection(ctx context.Context, dbConfig config.DbConfig, poolConfig
 		backoffDuration := backoffStrategy.NextBackOff()
 		log.Printf("Database connection failed (attempt %d/%d): %v. Retrying in %v",
 			retryCount, dbConfig.MaxRetries, lastErr, backoffDuration)
+		logger.Error("Database connection failed", zap.Error(lastErr), zap.Int("retry_count", retryCount))
 
 		// Wait for backoff duration or context cancellation
 		select {
 		case <-ctx.Done():
 			log.Printf("Database connection cancelled during backoff: %v", ctx.Err())
+			logger.Error("Database connection cancelled during backoff", zap.Error(ctx.Err()))
 			return nil
 		case <-time.After(backoffDuration):
 			// Continue to next retry
@@ -117,6 +129,7 @@ func attemptConnection(ctx context.Context, dbConfig config.DbConfig, poolConfig
 	}
 
 	log.Printf("Failed to connect to database after %d retries: %v", dbConfig.MaxRetries, lastErr)
+	logger.Error("Failed to connect to database after retries", zap.Error(lastErr))
 	return nil
 }
 
@@ -134,8 +147,10 @@ func createBackoffStrategy(config config.DbConfig) *backoff.ExponentialBackOff {
 
 // ClosePool safely closes the pool
 func ClosePool(pool *pgxpool.Pool) {
+	logger := middleware.ZapLogger
 	if pool != nil {
 		pool.Close()
 		log.Printf("Database pool closed")
+		logger.Info("Database pool closed")
 	}
 }

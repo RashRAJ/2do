@@ -13,7 +13,42 @@ dbConfig:
   connMaxLifetime: "1h"      # Connections live for 1 hour max
   connMaxIdleTime: "30m"     # Idle connections timeout after 30 minutes
 
-  maxRetries: 3             
+  maxRetries: 3
   initialDelay: "500ms"      # Start with 500ms delay
   maxDelay: "8s"             # Cap delay at 8 seconds
   totalTimeout: "50s"
+
+  services:
+    # vector is logs collector. It collects logs according to vector.yml
+    # and forwards them to VictoriaLogs
+    vector:
+      image: docker.io/timberio/vector:0.46.X-distroless-libc
+      volumes:
+        - type: bind
+          source: /var/run/docker.sock
+          target: /var/run/docker.sock
+        - type: bind
+          source: /var/lib/docker
+          target: /var/lib/docker
+        - ./vector-vl-single.yml:/etc/vector/vector.yaml:ro
+      depends_on: [ victorialogs ]
+      ports:
+        - "8686:8686"
+      user: root
+
+    #  VictoriaLogs instance, a single process responsible for
+    #  storing logs and serving read queries.
+    victorialogs:
+      image: victoriametrics/victoria-logs:v1.23.0-victorialogs
+      ports:
+        - "9428:9428"
+      command:
+        - "--storageDataPath=/vlogs"
+      volumes:
+        - vldata:/vlogs
+
+
+  volumes:
+    vmdata: { }
+    vldata: { }
+

@@ -14,5 +14,5 @@
 To run the app
 
 ```aiignore
-docker run --name some-postgres -e POSTGRES_PASSWORD=taskpassword -e POSTGRES_DB=task -p 5432:5432 -d postgres
+docker run --name postgres -e POSTGRES_PASSWORD=taskpassword -e POSTGRES_DB=task -p 5432:5432 -d postgres
 ```
