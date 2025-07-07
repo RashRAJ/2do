@@ -23,4 +23,9 @@
 ## Next Steps
 
 **Implement Authentication**: Replace the placeholder Auth middleware with actual authentication
+
 **Implement Caching**: Add caching for frequently accessed data
+
+**Set up observability**
+
+**Database snapshots**

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"2do.com/db"
 	"2do.com/middleware"
 	"context"
 	"net/http"
@@ -11,12 +12,12 @@ import (
 
 	"2do.com/handlers"
 	"2do.com/repository"
-	"2do.com/service"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 func main() {
+	db.RunMigrations()
 	middleware.InitLogger()
 	defer middleware.CleanupLogger()
 	logger := middleware.ZapLogger
@@ -31,14 +32,6 @@ func main() {
 
 	// Initialize repository
 	taskRepo := repository.NewPostgresqlClassic()
-
-	// Run database migration if needed
-	ctx := context.Background()
-	if err := service.Migrate(ctx, taskRepo); err != nil {
-		logger.Error("Migration failed", zap.Error(err))
-	} else {
-		logger.Info("Migration completed successfully")
-	}
 
 	// Initialize service
 	//taskService := service.NewTaskService(taskRepo, logger)

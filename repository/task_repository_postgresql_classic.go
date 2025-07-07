@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"2do.com/middleware"
-	"2do.com/migrate"
 	"2do.com/models"
 	"context"
 	"errors"
@@ -14,20 +12,15 @@ import (
 )
 
 type PostgresqlClassic struct {
-	db       *pgxpool.Pool
-	logger   *zap.Logger
-	migrator migrate.Migrator
+	*BaseRepository // Embed base repository
 }
 
-func NewPostgresqlClassic() *PostgresqlClassic {
-	db := ConnectDB()
-	logger := middleware.ZapLogger
-	migrator := migrate.NewPostgresMigrator(db)
-
+func NewTaskRepository(db *pgxpool.Pool, logger *zap.Logger) *PostgresqlClassic {
 	return &PostgresqlClassic{
-		db:       db,
-		logger:   logger,
-		migrator: migrator,
+		BaseRepository: &BaseRepository{
+			db:     db,
+			logger: logger,
+		},
 	}
 }
 
@@ -55,7 +48,7 @@ func (r *PostgresqlClassic) CreateTask(ctx context.Context, task models.Task) (*
 	}()
 
 	err = tx.QueryRow(ctx,
-		"INSERT INTO tasks (title, content, completed, created, priority) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		"INSERT INTO tasks (user_id, title, content, completed, created, priority) VALUES ($1, $2, $3, $4, $5) RETURNING id",
 		task.Title, task.Content, task.Completed, task.Created, task.Priority).Scan(&id)
 
 	if err != nil {
@@ -261,19 +254,4 @@ func (r *PostgresqlClassic) Close() {
 	if r.logger != nil {
 		r.logger.Sync()
 	}
-}
-
-// Migrate delegates to the migrator
-func (r *PostgresqlClassic) Migrate(ctx context.Context) error {
-	return r.migrator.Migrate(ctx)
-}
-
-// MigrateDown delegates to the migrator
-func (r *PostgresqlClassic) MigrateDown(ctx context.Context) error {
-	return r.migrator.MigrateDown(ctx)
-}
-
-// CheckMigrationStatus delegates to the migrator
-func (r *PostgresqlClassic) CheckMigrationStatus(ctx context.Context) (bool, error) {
-	return r.migrator.CheckMigrationStatus(ctx)
 }
